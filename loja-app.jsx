@@ -36,24 +36,30 @@ function ShopApp(){
   const [user,setUser] = useState(()=> (window.loadUser ? loadUser() : null));
   const [productsVer, setProductsVer] = useState(0); // força re-render após fetch
 
-  // carrega catálogo real do Supabase (override do mock LJ_PRODUCTS)
+  // carrega catálogo real do Supabase — na montagem E ao retornar para a aba
   useEffect(()=>{
-    const db = window.LJ_SUPABASE;
-    if(!db) return;
-    db.from('produtos').select('*').eq('ativo', true)
-      .order('destaque', {ascending:false})
-      .then(({data, error})=>{
-        if(data && data.length > 0){
-          window.LJ_PRODUCTS = data.map(p=>({
-            ...p,
-            cores: Array.isArray(p.cores) ? p.cores : [],
-            variantes: Array.isArray(p.variantes) ? p.variantes : [],
-            materiais: Array.isArray(p.materiais) ? p.materiais : [],
-          }));
-          setProductsVer(v=>v+1);
-        }
-        if(error) console.warn('[Loja] Supabase produtos:', error.message);
-      });
+    function fetchProducts(){
+      const db = window.LJ_SUPABASE;
+      if(!db) return;
+      db.from('produtos').select('*').eq('ativo', true)
+        .order('destaque', {ascending:false})
+        .then(({data, error})=>{
+          if(data && data.length > 0){
+            window.LJ_PRODUCTS = data.map(p=>({
+              ...p,
+              cores: Array.isArray(p.cores) ? p.cores : [],
+              variantes: Array.isArray(p.variantes) ? p.variantes : [],
+              materiais: Array.isArray(p.materiais) ? p.materiais : [],
+            }));
+            setProductsVer(v=>v+1);
+          }
+          if(error) console.warn('[Loja] Supabase produtos:', error.message);
+        });
+    }
+    fetchProducts();
+    const onVisible = ()=>{ if(document.visibilityState==='visible') fetchProducts(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return ()=> document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
   // persiste o carrinho no aparelho

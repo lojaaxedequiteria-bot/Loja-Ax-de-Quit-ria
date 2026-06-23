@@ -49,9 +49,18 @@ function Icon({ name, size=22, stroke=1.7, style }){
   );
 }
 
-/* ---- Imagem do produto: motivo de contas (guia) sobre fundo quente ----
-   placeholder elegante e representativo; trocável por <img> real do Supabase. */
+/* ---- Imagem do produto: foto real (quando disponível) ou animação de contas ---- */
 function ProductImage({ product, variant='ring', bare=false, children }){
+  // Foto real do estoque → mostra como imagem de capa
+  if(product.photo && !bare){
+    return (
+      <div style={{position:'absolute',inset:0,background:'#F3EADB',overflow:'hidden'}}>
+        <img src={product.photo} alt={product.nome||''}
+          style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+        {children}
+      </div>
+    );
+  }
   const cores = product.cores || ['#C9A24B','#E8C86B','#9A6B3F'];
   const tom = product.tom || '#F3EADB';
   const N = 22;
