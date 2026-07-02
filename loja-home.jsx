@@ -90,9 +90,6 @@ function HeroVitrine({ onCategory, onOpen }) {
             ) : (
               <>
                 <div className="lj-hero-orn"/>
-                <div className="lj-hero-ring">
-                  {prod && <ProductImage product={{cores: prod.cores, tom: 'transparent'}} variant="ring" bare/>}
-                </div>
                 <div className="lj-hero-body">
                   <div className="lj-hero-eyebrow" style={{color: s.accent}}>{s.eyebrow}</div>
                   <div className="lj-hero-title" dangerouslySetInnerHTML={{__html: s.title}}/>
