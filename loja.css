@@ -92,7 +92,7 @@
 
 /* ---- Hero: slides com foto — bolha de produto (visual idêntico ao .lj-thumb) ---- */
 .lj-hero-pf{
-  position:absolute;right:18px;top:22px;
+  position:absolute;left:50%;transform:translateX(-50%);top:22px;
   width:158px;height:158px;
   border-radius:24px;overflow:hidden;
   box-shadow:0 10px 32px rgba(42,33,27,.28),0 2px 6px rgba(42,33,27,.14);
@@ -360,7 +360,7 @@ select.lj-input{appearance:none;-webkit-appearance:none;background-image:url("da
   .lj-hero-sub { max-width: 440px; font-size: 15.5px; }
 
   /* Desktop: bolha de produto maior (mesma linguagem visual dos cards) */
-  .lj-hero-pf { width:200px; height:200px; right:28px; top:28px; border-radius:28px; }
+  .lj-hero-pf { width:200px; height:200px; left:50%; transform:translateX(-50%); top:28px; border-radius:28px; }
 
   .lj-sec { margin-top: 48px; }
   .lj-sec-h { max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 32px; }
