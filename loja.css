@@ -54,8 +54,13 @@
 /* ---------- hero / vitrine rotativa ---------- */
 .lj-hero{
   position:relative;margin:14px 18px 0;border-radius:24px;overflow:hidden;
-  height:392px;display:flex;flex-direction:column;justify-content:flex-end;
+  height:440px;display:flex;flex-direction:column;justify-content:flex-end;
   color:#fff;box-shadow:var(--shadow-lg);
+}
+.lj-hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;z-index:0;}
+.lj-hero-photo-overlay{
+  position:absolute;inset:0;z-index:1;
+  background:linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.82) 100%);
 }
 .lj-hero-slide{position:absolute;inset:0;opacity:0;transition:opacity .7s ease;display:flex;flex-direction:column;justify-content:flex-end;}
 .lj-hero-slide.on{opacity:1;}
@@ -77,11 +82,30 @@
 }
 .lj-hero-body{position:relative;z-index:3;padding:24px 22px 26px;
   background:linear-gradient(to top, rgba(16,9,5,.82) 0%, rgba(16,9,5,.6) 45%, rgba(16,9,5,.15) 80%, transparent 100%);}
+/* Para slides com foto: sem overrides — usa gradiente e largura completa do hero-body */
+.lj-hero-pf-body{}
 .lj-hero-eyebrow{font-size:11.5px;letter-spacing:.24em;text-transform:uppercase;font-weight:700;color:var(--gold-bright);margin-bottom:10px;}
 .lj-hero-title{font-family:var(--font-d);font-weight:600;font-size:33px;line-height:1.08;letter-spacing:-.01em;text-wrap:balance;}
 .lj-hero-title em{font-style:italic;color:var(--gold-bright);}
 .lj-hero-sub{font-size:14px;color:rgba(255,255,255,.85);margin-top:10px;max-width:320px;line-height:1.5;}
 .lj-hero-cta{margin-top:18px;display:flex;gap:10px;align-items:center;}
+
+/* ---- Hero: slides com foto — bolha de produto (visual idêntico ao .lj-thumb) ---- */
+.lj-hero-pf{
+  position:absolute;right:18px;top:22px;
+  width:158px;height:158px;
+  border-radius:24px;overflow:hidden;
+  box-shadow:0 10px 32px rgba(42,33,27,.28),0 2px 6px rgba(42,33,27,.14);
+  background:#F3EADB;
+  z-index:2;
+}
+.lj-hero-pf-img{
+  width:100%;height:100%;
+  object-fit:cover;object-position:center;
+  display:block;
+}
+.lj-hero-pf-gm{display:none;}
+.lj-hero-pf-gd{display:none;}
 
 /* ---------- buttons ---------- */
 .lj-btn{
@@ -324,3 +348,34 @@ select.lj-input{appearance:none;-webkit-appearance:none;background-image:url("da
 @keyframes ljpage{from{opacity:0;transform:translateY(6px);}}
 
 .lj-back{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--ink);background:none;border:0;cursor:pointer;padding:0;}
+
+/* ---------- desktop ≥720px — full width ---------- */
+@media (min-width: 720px) {
+  #root { max-width: 100% !important; box-shadow: none !important; }
+
+  /* Centraliza o conteúdo com max-width interno */
+  .lj-hero { max-width: 1200px; margin: 20px auto 0; height: 500px; }
+  .lj-hero-ring { width: 200px; height: 200px; top: 30px; }
+  .lj-hero-title { font-size: 46px; }
+  .lj-hero-sub { max-width: 440px; font-size: 15.5px; }
+
+  /* Desktop: bolha de produto maior (mesma linguagem visual dos cards) */
+  .lj-hero-pf { width:200px; height:200px; right:28px; top:28px; border-radius:28px; }
+
+  .lj-sec { margin-top: 48px; }
+  .lj-sec-h { max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 32px; }
+  .lj-sec-h .t { font-size: 28px; }
+
+  .lj-grid {
+    max-width: 1200px; margin-left: auto; margin-right: auto;
+    padding: 0 32px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px 18px;
+  }
+
+  .lj-cats-wrap { max-width: 1200px; margin: 0 auto; }
+  .lj-cats { padding: 2px 32px 6px; gap: 16px; }
+
+  .lj-trust { max-width: 1200px; margin: 0 auto; padding: 28px 32px 10px; gap: 16px; }
+  .lj-trust-item { padding: 18px 12px; font-size: 12px; }
+}

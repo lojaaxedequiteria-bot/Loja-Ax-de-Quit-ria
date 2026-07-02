@@ -11,7 +11,7 @@ const CAT_TINTS = {
   banhos: { bg: 'var(--olive-soft)', fg: 'var(--olive)' }
 };
 
-function ProductCard({ p, onOpen, onAdd, added }) {
+function ProductCard({ p, onOpen, onAdd, added, isFavorite, onFavorite }) {
   const badgeCls = p.badge === 'Oferta' ? 'oferta' : p.badge === 'Novo' ? 'novo' : '';
   const catName = (LJ_CATEGORIES.find((c) => c.id === p.categoria) || {}).name || '';
   const sub = p.orixa || catName;
@@ -20,6 +20,13 @@ function ProductCard({ p, onOpen, onAdd, added }) {
       <div className="lj-thumb">
         <ProductImage product={p} variant="ring" />
         {p.badge && <span className={'lj-pbadge ' + badgeCls}>{p.badge}</span>}
+        {onFavorite && (
+          <button className="lj-quickadd" onClick={(e)=>{e.stopPropagation();onFavorite(p.id);}}
+            style={{left:8,right:'auto',background:isFavorite?'var(--clay)':'rgba(255,255,255,.85)',color:isFavorite?'#fff':'var(--clay)'}}
+            aria-label="Favoritar">
+            <Icon name="heart" size={17}/>
+          </button>
+        )}
         <button className={'lj-quickadd' + (added ? ' added' : '')}
         onClick={(e) => {e.stopPropagation();onAdd(p);}}
         aria-label="Adicionar ao carrinho">
@@ -34,24 +41,14 @@ function ProductCard({ p, onOpen, onAdd, added }) {
       </div>
       <div className="lj-rating"><Stars value={p.avaliacao} /><span style={{ color: 'var(--ink-3)' }}>({p.num_avaliacoes})</span></div>
     </div>);
-
 }
 
-/* ---- vitrine rotativa: cada slide destaca um produto/categoria ---- */
-const HERO_SLIDES = [
-{ pid: 'gp-oxum', eyebrow: 'Coleção de guias', title: 'Vista a sua <em>fé</em> com axé', sub: 'Guias feitas à mão, conta por conta, com respeito ao fundamento.', cta: 'Ver guias', cat: 'guias',
-  bg: 'linear-gradient(160deg,#8E4023,#6E2C18 48%,#3A1A12)', accent: '#E8C86B' },
-{ pid: 'gp-iemanja', eyebrow: 'Alto fundamento', title: 'O brilho do <em>mar</em> de Iemanjá', sub: 'Brajás e peças premium com búzios e madrepérola natural.', cta: 'Quero conhecer', cat: 'guias',
-  bg: 'linear-gradient(160deg,#2F5A78,#1E3F57 50%,#10222F)', accent: '#BFD6E6' },
-{ pid: 'ch-turbante', eyebrow: 'Coroa de pano', title: 'Turbantes que <em>elevam</em> a coroa', sub: 'Estampas exclusivas, pré-amarrados, fáceis de vestir.', cta: 'Ver vestuário', cat: 'chapeus',
-  bg: 'linear-gradient(160deg,#7A2A24,#9B3022 50%,#4A1712)', accent: '#C9A24B' },
-{ pid: 'pl-7orixas', eyebrow: 'Proteção no pulso', title: 'Leve seus <em>orixás</em> com você', sub: 'Pulseiras das sete cores, firmas e cristais selecionados.', cta: 'Ver pulseiras', cat: 'pulseiras',
-  bg: 'linear-gradient(160deg,#566B49,#3E5236 50%,#243019)', accent: '#C9D9B8' }];
+/* slides dinâmicos — LJ_SLIDES vem de loja-data.js, sobrescrito pelo Supabase */
 
 
 function HeroVitrine({ onCategory, onOpen }) {
   const [i, setI] = useState(0);
-  const n = HERO_SLIDES.length;
+  const n = LJ_SLIDES.length;
   const pausedRef = useRef(false);
   useEffect(() => {
     const iv = setInterval(() => {if (!pausedRef.current) setI((x) => (x + 1) % n);}, 4500);
@@ -62,28 +59,55 @@ function HeroVitrine({ onCategory, onOpen }) {
   return (
     <div className="lj-hero lj-fade"
     onMouseEnter={() => pausedRef.current = true} onMouseLeave={() => pausedRef.current = false}>
-      {HERO_SLIDES.map((s, idx) => {
-        const prod = LJ_PRODUCTS.find((p) => p.id === s.pid);
+      {LJ_SLIDES.map((s, idx) => {
+        const prod = !s.photo && s.pid ? LJ_PRODUCTS.find((p) => p.id === s.pid) : null;
         return (
           <div key={idx} className={'lj-hero-slide' + (idx === i ? ' on' : '')} style={{ background: s.bg }}>
-            <div className="lj-hero-orn" />
-            <div className="lj-hero-ring">
-              {prod && <ProductImage product={{ cores: prod.cores, tom: 'transparent' }} variant="ring" bare />}
-            </div>
-            <div className="lj-hero-body">
-              <div className="lj-hero-eyebrow" style={{ color: s.accent }}>{s.eyebrow}</div>
-              <div className="lj-hero-title" dangerouslySetInnerHTML={{ __html: s.title }} />
-              <div className="lj-hero-sub">{s.sub}</div>
-              <div className="lj-hero-cta" style={{ display: 'flex', gap: 10 }}>
-                <button className="lj-btn gold lg" onClick={() => onCategory(s.cat)}>{s.cta} <Icon name="chevR" size={18} /></button>
-                {prod && <button className="lj-btn light lg" onClick={() => onOpen(prod)}>{brl(prod.preco)}</button>}
-              </div>
-            </div>
+            {s.photo ? (
+              <>
+                {/* foto: CSS controla posição mobile (superior direito) vs desktop (metade direita) */}
+                <div className="lj-hero-pf">
+                  <img src={s.photo} alt="" className="lj-hero-pf-img"/>
+                </div>
+                {/* gradiente mobile: base → cima (funde com texto) */}
+                <div className="lj-hero-pf-gm" style={{
+                  background:`linear-gradient(to top, ${s.bg} 38%, ${s.bg}88 60%, transparent 100%)`
+                }}/>
+                {/* gradiente desktop: esquerda → direita (funde foto com cor do slide) */}
+                <div className="lj-hero-pf-gd" style={{
+                  background:`linear-gradient(to right, ${s.bg} 24%, ${s.bg}CC 40%, transparent 58%)`
+                }}/>
+                {/* texto: lj-hero-body = full-width mobile (igual à 1ª versão); pf-body = desktop restringe à esquerda */}
+                <div className="lj-hero-body" style={{zIndex:3}}>
+                  <div className="lj-hero-eyebrow" style={{color:s.accent||'var(--gold-bright)'}}>{s.eyebrow}</div>
+                  <div className="lj-hero-title" dangerouslySetInnerHTML={{__html:s.title}}/>
+                  <div className="lj-hero-sub">{s.sub}</div>
+                  <div className="lj-hero-cta" style={{display:'flex', gap:10}}>
+                    <button className="lj-btn gold lg" onClick={() => onCategory(s.cat)}>{s.cta} <Icon name="chevR" size={18}/></button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="lj-hero-orn"/>
+                <div className="lj-hero-ring">
+                  {prod && <ProductImage product={{cores: prod.cores, tom: 'transparent'}} variant="ring" bare/>}
+                </div>
+                <div className="lj-hero-body">
+                  <div className="lj-hero-eyebrow" style={{color: s.accent}}>{s.eyebrow}</div>
+                  <div className="lj-hero-title" dangerouslySetInnerHTML={{__html: s.title}}/>
+                  <div className="lj-hero-sub">{s.sub}</div>
+                  <div className="lj-hero-cta" style={{display:'flex', gap:10}}>
+                    <button className="lj-btn gold lg" onClick={() => onCategory(s.cat)}>{s.cta} <Icon name="chevR" size={18}/></button>
+                    {prod && <button className="lj-btn light lg" onClick={() => onOpen(prod)}>{brl(prod.preco)}</button>}
+                  </div>
+                </div>
+              </>
+            )}
           </div>);
-
       })}
       <div className="lj-hero-dots">
-        {HERO_SLIDES.map((_, idx) =>
+        {LJ_SLIDES.map((_, idx) =>
         <div key={idx} className={'lj-hero-dot' + (idx === i ? ' on' : '')} onClick={() => setI(idx)} />
         )}
       </div>
@@ -128,7 +152,7 @@ function CategoryCarousel({ onCategory }) {
 
 }
 
-function HomeScreen({ onOpen, onAdd, onCategory, addedIds, onMenu, onCart, cartCount, onAccount, user }) {
+function HomeScreen({ onOpen, onAdd, onCategory, addedIds, onMenu, onCart, cartCount, onAccount, user, favorites, onFavorite }) {
   const destaques = LJ_PRODUCTS.filter((p) => p.destaque);
   return (
     <>
@@ -150,7 +174,8 @@ function HomeScreen({ onOpen, onAdd, onCategory, addedIds, onMenu, onCart, cartC
           </div>
           <div className="lj-grid">
             {destaques.map((p) =>
-            <ProductCard key={p.id} p={p} onOpen={onOpen} onAdd={onAdd} added={addedIds.includes(p.id)} />
+            <ProductCard key={p.id} p={p} onOpen={onOpen} onAdd={onAdd} added={addedIds.includes(p.id)}
+              isFavorite={favorites&&favorites.has(p.id)} onFavorite={onFavorite}/>
             )}
           </div>
         </div>
@@ -196,7 +221,7 @@ function Header({ onMenu, onCart, cartCount, title, onBack, onAccount, user }) {
 }
 
 /* ---- listagem por categoria ---- */
-function CategoryScreen({ catId, onOpen, onAdd, addedIds, onCart, cartCount, onBack }) {
+function CategoryScreen({ catId, onOpen, onAdd, addedIds, onCart, cartCount, onBack, favorites, onFavorite }) {
   const cat = LJ_CATEGORIES.find((c) => c.id === catId);
   const list = catId === 'all' ? LJ_PRODUCTS : LJ_PRODUCTS.filter((p) => p.categoria === catId);
   return (
@@ -209,7 +234,8 @@ function CategoryScreen({ catId, onOpen, onAdd, addedIds, onCart, cartCount, onB
         </div>
         <div className="lj-grid" style={{ paddingTop: 12 }}>
           {list.map((p) =>
-          <ProductCard key={p.id} p={p} onOpen={onOpen} onAdd={onAdd} added={addedIds.includes(p.id)} />
+          <ProductCard key={p.id} p={p} onOpen={onOpen} onAdd={onAdd} added={addedIds.includes(p.id)}
+            isFavorite={favorites&&favorites.has(p.id)} onFavorite={onFavorite}/>
           )}
         </div>
         <div style={{ height: 30 }} />
