@@ -1,141 +1,415 @@
-/* ===== Axé de Quitéria — Loja: UI base ===== */
-const { useState, useMemo, useRef, useEffect } = React;
+/* ===== Axé de Quitéria — Loja: UI Compartilhado ===== */
+/* Expose hooks globally so all subsequent babel scripts can use them without re-importing */
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+Object.assign(window, { useState, useEffect, useRef, useMemo, useCallback });
 
-const brl = (n)=> 'R$ ' + (n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+/* ---------- Icons ---------- */
+function Icon({ name, size = 20, color }) {
+  const s = { width:size, height:size, flexShrink:0, display:'block', ...(color?{color}:{}) };
+  if (name==='person')  return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg>;
+  if (name==='bag')     return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>;
+  if (name==='close')   return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+  if (name==='chevR')   return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="9 18 15 12 9 6"/></svg>;
+  if (name==='chevL')   return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="15 18 9 12 15 6"/></svg>;
+  if (name==='heart')   return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>;
+  if (name==='heart-f') return <svg style={s} viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>;
+  if (name==='logout')  return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M15 4h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-3"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h9"/></svg>;
+  if (name==='box')     return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>;
+  if (name==='lock')    return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+  if (name==='wa')      return <svg style={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.5A10 10 0 1 0 12 2zm0 2a8 8 0 0 1 0 16 8 8 0 0 1-4.1-1.1l-.3-.2-2.9.9.9-2.8-.2-.3A8 8 0 0 1 12 4z"/></svg>;
+  if (name==='check')   return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><polyline points="20 6 9 17 4 12"/></svg>;
+  if (name==='mail')    return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;
+  if (name==='map')     return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
+  return null;
+}
 
-/* ---- ícones (stroke, geométrico) ---- */
-const _p = (d,k)=> React.createElement('path',{d,key:k,fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'});
-const LJ_ICONS = {
-  menu:   ['M4 7h16','M4 12h16','M4 17h16'],
-  cart:   ['M5 7h14l-1.4 9.5a2 2 0 0 1-2 1.7H8.4a2 2 0 0 1-2-1.7L5 7z','M8.5 7a3.5 3.5 0 0 1 7 0','M9 21a1 1 0 1 0 0-.01z','M15 21a1 1 0 1 0 0-.01z'],
-  bag:    ['M6 8h12l-1 12H7z','M9 8a3 3 0 0 1 6 0'],
-  search: ['M11 11a5 5 0 1 0-.01-.01z','M15 15l4 4'],
-  plus:   ['M12 5v14','M5 12h14'],
-  minus:  ['M5 12h14'],
-  check:  ['M5 12.5l4.5 4.5L19 7'],
-  chevR:  ['M9 5l7 7-7 7'],
-  chevL:  ['M15 5l-7 7 7 7'],
-  close:  ['M6 6l12 12','M18 6 6 18'],
-  star:   ['M12 3.5l2.6 5.7 6 .6-4.5 4 1.3 6L12 17.7 6.6 19.8l1.3-6-4.5-4 6-.6z'],
-  zoom:   ['M11 11a5 5 0 1 0-.01-.01z','M15 15l4 4','M11 9v4','M9 11h4'],
-  guia:   ['M6 5c0 6 2.7 10 6 10s6-4 6-10','M12 15v3.2','M12 22a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'],
-  beads:  ['M4.5 9c2.5 0 2.5 3 5 3s2.5-3 5-3 2.5 3 5 3','M4.5 15c2.5 0 2.5-3 5-3','M19.5 15c-2.5 0-2.5-3-5-3','M6.7 8.8a.7.7 0 1 0 0-.01z','M12 12a.8.8 0 1 0 0-.01z','M17.3 8.8a.7.7 0 1 0 0-.01z'],
-  candle: ['M9 9.5h6v9.5H9z','M9.5 19.2h5','M12 9.5V6','M12 6c0-1.4-1.3-1.8-1.3-3C10.7 1.9 12 1.2 12 1.2s1.3.7 1.3 1.8c0 1.2-1.3 1.6-1.3 3z'],
-  bracelet:['M5 12a7 7 0 1 0 14 0','M5 12a7 7 0 0 1 14 0','M9.2 5.2l.8 2M14.8 5.2l-.8 2','M12 4.4V6.6','M7 18.5l1-1.6M17 18.5l-1-1.6'],
-  bangle: ['M12 21a9 7 0 1 0 0-14 9 7 0 0 0 0 14z','M12 18.2a6 4.2 0 1 0 0-8.4 6 4.2 0 0 0 0 8.4z','M12 4.5V7','M9.5 5l.6 2.1','M14.5 5l-.6 2.1'],
-  patua:  ['M8.5 8.2 7 5.8a1 1 0 0 1 .9-1.5h8.2a1 1 0 0 1 .9 1.5l-1.5 2.4','M6 8.2h12l-1 9.8a2 2 0 0 1-2 1.8H9a2 2 0 0 1-2-1.8z','M12 12v3.2','M12 12a1.4 1.4 0 1 0 0-.01z'],
-  shirt:  ['M8 3 4 6l2 2.5L8 7v14h8V7l2 1.5L20 6l-4-3-2 2h-4z'],
-  hat:    ['M3 17c2-1 5-1.5 9-1.5s7 .5 9 1.5','M6.5 16.5 8 5.5c.2-1.4 1.4-2.5 2.8-2.5h2.4c1.4 0 2.6 1.1 2.8 2.5l1.5 11','M9.5 19.5c1.6.4 3.4.4 5 0'],
-  tool:   ['M14.5 6a3.5 3.5 0 0 0-4.6 4.3L4 16.2 6.8 19l5.9-5.9A3.5 3.5 0 0 0 17 8.5l-2 2-1.5-1.5 2-2A3.5 3.5 0 0 0 14.5 6z'],
-  leaf:   ['M5 19c0-8 5-13 14-14 0 9-4 14-14 14z','M5 19c2-4 5-7 9-9'],
-  heart:  ['M12 20s-7-4.6-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.4-7 10-7 10z'],
-  truck:  ['M3 7h11v9H3z','M14 10h4l3 3v3h-7z','M7.5 19a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2z','M17.5 19a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2z'],
-  shield: ['M12 3l7 3v5c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6z','M9 12l2 2 4-4'],
-  spark:  ['M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z'],
-  hand:   ['M7 11V6.5a1.5 1.5 0 0 1 3 0V11','M10 11V5a1.5 1.5 0 0 1 3 0v6','M13 11V6.5a1.5 1.5 0 0 1 3 0V13c0 3.5-2 6-5 6h-1c-2 0-3-1-4.5-3L4 12.5a1.5 1.5 0 0 1 2.3-1.9L7 11.5'],
-  pix:    ['M12 3l4.5 4.5L12 12 7.5 7.5z','M12 12l4.5 4.5L12 21l-4.5-4.5z','M3 12l4.5-4.5L12 12l-4.5 4.5z','M21 12l-4.5-4.5','M21 12l-4.5 4.5'],
-  card:   ['M3 6.5h18v11H3z','M3 10h18','M6 14h4'],
-  whats:  ['M12 3a8.5 8.5 0 0 0-7.3 12.8L3.5 21l5.4-1.4A8.5 8.5 0 1 0 12 3z','M8.8 8.4c.6 2.2 2.6 4.2 4.8 4.8.7.2 1.2-.1 1.5-.6l.3-.6 1.6.8c0 .9-.7 1.7-1.6 1.8-2.9.2-6.6-3.5-6.4-6.4.1-.9.9-1.6 1.8-1.6l.8 1.6-.6.3c-.5.3-.8.8-.5 1.5z'],
-  pin:    ['M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z','M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z'],
-  flame:  ['M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-1.2.4-2.3 1-3.3.6 1 1.5 1.6 2.2 1.3C9.6 9 10 6.5 12 3z'],
-  user:   ['M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z','M5 20a7 7 0 0 1 14 0'],
-};
-function Icon({ name, size=22, stroke=1.7, style }){
-  const paths = LJ_ICONS[name] || LJ_ICONS.bag;
+/* ---------- Placeholder striped ---------- */
+function Ph({ style }) {
+  return <span style={{ display:'block', background:'repeating-linear-gradient(135deg,var(--cream-2) 0 13px,var(--cream-3) 13px 26px)', ...style }}/>;
+}
+
+/* ---------- Buttons ---------- */
+function BtnClay({ onClick, children, style, disabled, type }) {
+  const [h, setH] = useState(false);
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" style={style} aria-hidden="true">
-      {paths.map((d,i)=>React.createElement('path',{d,key:i,fill:'none',stroke:'currentColor',strokeWidth:stroke,strokeLinecap:'round',strokeLinejoin:'round'}))}
-    </svg>
+    <button type={type||'button'} onClick={onClick} disabled={disabled}
+      onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+      style={{background:disabled?'var(--muted)':h?'var(--clay-deep)':'var(--clay)',color:'#fff',border:'none',borderRadius:999,
+        padding:'15px 30px',fontFamily:"'Mulish',sans-serif",fontSize:15,fontWeight:700,
+        cursor:disabled?'not-allowed':'pointer',letterSpacing:'.01em',transition:'background .15s',...style}}>
+      {children}
+    </button>
   );
 }
 
-/* ---- Imagem do produto: foto real (quando disponível) ou animação de contas ---- */
-function ProductImage({ product, variant='ring', bare=false, children }){
-  // Foto real do estoque → mostra como imagem de capa
-  if(product.photo && !bare){
-    return (
-      <div style={{position:'absolute',inset:0,background:'#F3EADB',overflow:'hidden'}}>
-        <img src={product.photo} alt={product.nome||''}
-          style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
-        {children}
-      </div>
-    );
-  }
-  const cores = product.cores || ['#C9A24B','#E8C86B','#9A6B3F'];
-  const tom = product.tom || '#F3EADB';
-  const N = 22;
-  const beads = [];
-  for(let i=0;i<N;i++){
-    const a = (i/N)*Math.PI*2 - Math.PI/2;
-    const R = 33;                 // % radius
-    const cx = 50 + R*Math.cos(a);
-    const cy = 50 + R*Math.sin(a);
-    const col = cores[i % cores.length];
-    const big = (i===Math.round(N/2)); // pingente embaixo
-    beads.push(
-      <div key={i} style={{
-        position:'absolute', left:cx+'%', top:cy+'%',
-        width:big?'15%':'10.5%', aspectRatio:'1/1', borderRadius:'50%',
-        transform:'translate(-50%,-50%)',
-        background:`radial-gradient(circle at 32% 28%, #ffffffcc, ${col} 46%, ${shade(col,-18)} 100%)`,
-        boxShadow:'0 1px 2px rgba(42,33,27,.22)',
-      }}/>
-    );
-  }
-  // strand: fios paralelos | pendant: foco numa conta grande
-  let inner;
-  if(variant==='strand'){
-    inner = (
-      <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',gap:'9%'}}>
-        {[0,1,2].map(col=>(
-          <div key={col} style={{display:'flex',flexDirection:'column',gap:'5%'}}>
-            {Array.from({length:9}).map((_,i)=>(
-              <div key={i} style={{width:18,height:18,borderRadius:'50%',
-                background:`radial-gradient(circle at 32% 28%, #ffffffcc, ${cores[(i+col)%cores.length]} 46%, ${shade(cores[(i+col)%cores.length],-18)} 100%)`,
-                boxShadow:'0 1px 2px rgba(42,33,27,.2)'}}/>
-            ))}
-          </div>
-        ))}
-      </div>
-    );
-  } else if(variant==='pendant'){
-    inner = (
-      <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
-        <div style={{width:'46%',aspectRatio:'1/1',borderRadius:'50%',
-          background:`radial-gradient(circle at 34% 30%, #ffffffe0, ${cores[0]} 44%, ${shade(cores[0],-22)} 100%)`,
-          boxShadow:'0 6px 18px rgba(42,33,27,.25), inset 0 -6px 14px rgba(0,0,0,.12)'}}/>
-      </div>
-    );
-  } else {
-    inner = <div style={{position:'absolute',inset:0}}>{beads}</div>;
-  }
+function BtnOutline({ onClick, children, style }) {
+  const [h, setH] = useState(false);
   return (
-    <div style={{position:'absolute',inset:0,
-      background: bare ? 'transparent' : `radial-gradient(120% 100% at 50% 18%, #fff 0%, ${tom} 62%, ${shade(tom,-8)} 100%)`}}>
-      {!bare && <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(rgba(42,33,27,.04) 1px, transparent 1px)',backgroundSize:'14px 14px'}}/>}
-      {inner}
+    <button onClick={onClick}
+      onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+      style={{background:'none',color:'var(--ink)',border:`1px solid ${h?'var(--ink)':'var(--line)'}`,borderRadius:999,
+        padding:'15px 28px',fontFamily:"'Mulish',sans-serif",fontSize:15,fontWeight:600,
+        cursor:'pointer',transition:'border-color .15s',...style}}>
       {children}
+    </button>
+  );
+}
+
+/* ---------- ProductCard ---------- */
+function ProductCard({ p, onOpen, onAdd, isFav, onFav }) {
+  const [hov, setHov] = useState(false);
+  const [hovBtn, setHovBtn] = useState(false);
+  return (
+    <div style={{display:'flex',flexDirection:'column'}}>
+      <div style={{position:'relative'}}>
+        <button onClick={()=>onOpen(p)}
+          onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+          style={{border:`1px solid ${hov?'var(--clay)':'var(--line)'}`,borderRadius:12,overflow:'hidden',
+            background:'var(--paper)',cursor:'pointer',padding:0,position:'relative',display:'block',width:'100%',
+            transition:'border-color .15s'}}>
+          {p.photo
+            ? <img src={p.photo} alt={p.name} style={{width:'100%',aspectRatio:'1/1',objectFit:'cover',display:'block'}}/>
+            : <Ph style={{aspectRatio:'1/1'}}/>
+          }
+          {p.tag && <span style={{position:'absolute',left:11,top:11,fontSize:11,fontWeight:700,color:'#fff',background:p.tone,padding:'4px 9px',borderRadius:999}}>{p.tag}</span>}
+        </button>
+        {onFav && (
+          <button onClick={e=>{e.stopPropagation();onFav(p);}}
+            style={{position:'absolute',top:10,right:10,width:34,height:34,borderRadius:'50%',background:'rgba(255,255,255,.9)',backdropFilter:'blur(4px)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',zIndex:2}}
+            onMouseEnter={e=>e.currentTarget.style.transform='scale(1.15)'}
+            onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
+            <HeartIcon filled={!!isFav}/>
+          </button>
+        )}
+      </div>
+      <div style={{padding:'13px 2px 0',display:'flex',flexDirection:'column',flex:1}}>
+        <span style={{fontFamily:"'Marcellus',serif",fontSize:19,color:'var(--ink)',lineHeight:1.15}}>{p.name}</span>
+        <span style={{fontSize:12.5,color:'var(--muted)',marginTop:3}}>{p.orixa}</span>
+        <div style={{marginTop:'auto',paddingTop:12,display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
+          <span style={{fontSize:17,fontWeight:700,color:'var(--ink)'}}>{brl(p.price)}</span>
+          <button onClick={(e)=>{e.stopPropagation();onAdd(p);}}
+            onMouseEnter={()=>setHovBtn(true)} onMouseLeave={()=>setHovBtn(false)}
+            style={{background:hovBtn?'var(--clay)':'var(--ink)',color:'var(--cream)',border:'none',borderRadius:999,
+              padding:'9px 16px',fontSize:13,fontWeight:700,cursor:'pointer',transition:'background .15s',whiteSpace:'nowrap'}}>
+            Comprar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-/* escurece/clareia um hex */
-function shade(hex, pct){
-  const h = hex.replace('#',''); const n = parseInt(h.length===3?h.split('').map(c=>c+c).join(''):h,16);
-  let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
-  r=Math.max(0,Math.min(255,Math.round(r+r*pct/100)));
-  g=Math.max(0,Math.min(255,Math.round(g+g*pct/100)));
-  b=Math.max(0,Math.min(255,Math.round(b+b*pct/100)));
-  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
-}
-
-function Stars({ value, size=13 }){
+/* ---------- Header ---------- */
+function NavLink({ label, onClick }) {
+  const [h, setH] = useState(false);
   return (
-    <span style={{display:'inline-flex',alignItems:'center',gap:2,color:'var(--gold)'}}>
-      <Icon name="star" size={size} stroke={1.6} style={{fill:'currentColor'}}/>
-      <b style={{color:'var(--ink-2)',fontWeight:700}}>{value.toFixed(1)}</b>
-    </span>
+    <button onClick={onClick} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+      style={{background:'none',border:'none',cursor:'pointer',fontFamily:"'Mulish',sans-serif",fontSize:14,fontWeight:600,
+        color:h?'var(--clay)':'var(--ink)',padding:'6px 0',letterSpacing:'.01em',transition:'color .15s'}}>
+      {label}
+    </button>
   );
 }
 
-Object.assign(window, { brl, Icon, ProductImage, shade, Stars, useState, useMemo, useRef, useEffect });
+function HeaderIconBtn({ onClick, ariaLabel, badge, children }) {
+  const [h, setH] = useState(false);
+  return (
+    <button onClick={onClick} aria-label={ariaLabel}
+      onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+      style={{position:'relative',background:'none',border:`1px solid ${h?'var(--clay)':'var(--line)'}`,
+        borderRadius:999,width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center',
+        cursor:'pointer',transition:'border-color .15s'}}>
+      {children}
+      {badge>0 && (
+        <span style={{position:'absolute',top:-4,right:-4,background:'var(--clay)',color:'#fff',fontSize:11,fontWeight:700,
+          minWidth:19,height:19,borderRadius:999,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 5px'}}>
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function AppHeader({ onHome, onListing, onGuias, onSobre, onContato, onCart, onAccount, cartCount }) {
+  return (
+    <header className="lj-desktop-header" style={{position:'sticky',top:0,zIndex:40,background:'rgba(245,237,225,.92)',backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',borderBottom:'1px solid var(--line)'}}>
+      <div style={{maxWidth:1200,margin:'0 auto',padding:'14px 24px',display:'flex',alignItems:'center',gap:24}}>
+        <button onClick={onHome} style={{display:'flex',alignItems:'center',gap:12,background:'none',border:'none',cursor:'pointer',padding:0,flexShrink:0}}>
+          <img src="assets/logo-axe.jpeg" alt="Axé de Quitéria" style={{width:48,height:48,borderRadius:'50%',objectFit:'contain',flexShrink:0,boxShadow:'0 0 0 1px var(--line)',background:'var(--cream)'}}/>
+          <span style={{textAlign:'left',lineHeight:1}}>
+            <span style={{display:'block',fontFamily:"'Marcellus',serif",fontSize:20,color:'var(--ink)',letterSpacing:'.01em'}}>Axé de Quitéria</span>
+            <span style={{display:'block',fontFamily:"'Marcellus SC',serif",fontSize:10,letterSpacing:'.24em',color:'var(--clay)',marginTop:3}}>ARTIGOS RELIGIOSOS</span>
+          </span>
+        </button>
+        <nav style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:26}}>
+          {[['Início',onHome],['Loja',onListing],['Guias',onGuias],['Sobre',onSobre],['Contato',onContato]].map(([label,act])=>(
+            <NavLink key={label} label={label} onClick={act}/>
+          ))}
+        </nav>
+        <div style={{display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
+          <HeaderIconBtn onClick={onAccount} ariaLabel="Minha conta"><Icon name="person" size={19}/></HeaderIconBtn>
+          <HeaderIconBtn onClick={onCart} ariaLabel="Carrinho" badge={cartCount}><Icon name="bag" size={19}/></HeaderIconBtn>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ---------- AnnouncementBar ---------- */
+function AnnouncementBar() {
+  return (
+    <div className="lj-announce-bar" style={{background:'var(--ink)',color:'var(--cream)',fontSize:12.5,letterSpacing:'.04em',textAlign:'center',padding:'9px 16px',fontWeight:500}}>
+      Frete grátis acima de R$200 &nbsp;·&nbsp; Peças firmadas à mão em Porto Alegre &nbsp;·&nbsp; Atendimento no WhatsApp
+    </div>
+  );
+}
+
+/* ---------- Toast ---------- */
+function Toast({ msg }) {
+  if (!msg) return null;
+  return (
+    <div className="lj-toast" style={{position:'fixed',left:'50%',bottom:32,transform:'translateX(-50%)',zIndex:70,
+      background:'var(--ink)',color:'var(--cream)',padding:'14px 24px',borderRadius:999,
+      fontSize:14,fontWeight:600,boxShadow:'0 10px 30px rgba(0,0,0,.25)',whiteSpace:'nowrap',pointerEvents:'none'}}>
+      {msg}
+    </div>
+  );
+}
+
+/* ---------- WhatsApp FAB ---------- */
+function WaButton() {
+  return (
+    <a href={`https://wa.me/${LJ_STORE.whatsapp}`} target="_blank" rel="noopener noreferrer"
+      className="lj-wa-btn"
+      style={{position:'fixed',right:22,bottom:22,zIndex:45,width:56,height:56,borderRadius:'50%',
+        background:'#1FA855',display:'flex',alignItems:'center',justifyContent:'center',
+        boxShadow:'0 8px 24px rgba(0,0,0,.25)',textDecoration:'none'}}>
+      <Icon name="wa" size={28} color="#fff"/>
+    </a>
+  );
+}
+
+/* ---------- Drawer base ---------- */
+function Drawer({ onClose, width, children }) {
+  return (
+    <div style={{position:'fixed',inset:0,zIndex:60,display:'flex',justifyContent:'flex-end'}}>
+      <div onClick={onClose} style={{position:'absolute',inset:0,background:'rgba(44,30,20,.5)',animation:'fadeIn .22s ease'}}/>
+      <div style={{position:'relative',width:`min(${width||'420px'},100%)`,height:'100%',background:'var(--cream)',
+        display:'flex',flexDirection:'column',boxShadow:'-12px 0 40px rgba(0,0,0,.2)',animation:'slideInRight .28s cubic-bezier(.2,.9,.3,1)'}}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- AppFooter ---------- */
+function FooterLink({ label, onClick }) {
+  const [h, setH] = useState(false);
+  return (
+    <button onClick={onClick} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+      style={{background:'none',border:'none',color:h?'#fff':'rgba(245,237,225,.85)',fontSize:14,textAlign:'left',cursor:'pointer',padding:0,transition:'color .15s'}}>
+      {label}
+    </button>
+  );
+}
+
+function AppFooter({ onListing, onHome }) {
+  return (
+    <footer className="lj-footer" style={{background:'var(--ink)',color:'var(--cream)',marginTop:40}}>
+      <div style={{maxWidth:1200,margin:'0 auto',padding:'56px 24px 30px',display:'grid',gridTemplateColumns:'1.4fr 1fr 1fr 1.2fr',gap:36}} className="footer-grid">
+        <div>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <img src="assets/logo-axe.jpeg" alt="Axé de Quitéria" style={{width:52,height:52,borderRadius:'50%',objectFit:'contain',flexShrink:0,boxShadow:'0 0 0 1px rgba(245,237,225,.25)',background:'var(--cream)'}}/>
+            <span style={{fontFamily:"'Marcellus',serif",fontSize:22}}>Axé de Quitéria</span>
+          </div>
+          <p style={{fontSize:14,lineHeight:1.7,color:'rgba(245,237,225,.7)',margin:'14px 0 0',maxWidth:260}}>
+            Guias, pulseiras e itens sagrados firmados à mão em Porto Alegre. Axé em cada peça.
+          </p>
+        </div>
+        <div>
+          <span style={{fontFamily:"'Marcellus SC',serif",fontSize:11,letterSpacing:'.2em',color:'var(--gold-soft)'}}>LOJA</span>
+          <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:16}}>
+            {[
+              ['Todas as peças', ()=>onListing()],
+              ['Guias',          ()=>onListing('guias')],
+              ['Pulseiras',      ()=>onListing('pulseiras')],
+              ['Braceletes',     ()=>onListing('braceletes')],
+            ].map(([l,a])=>(
+              <FooterLink key={l} label={l} onClick={a}/>
+            ))}
+          </div>
+        </div>
+        <div>
+          <span style={{fontFamily:"'Marcellus SC',serif",fontSize:11,letterSpacing:'.2em',color:'var(--gold-soft)'}}>ATENDIMENTO</span>
+          <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:16}}>
+            {['Segunda a sexta, 9h–18h','Sábados, 9h–13h','Envio para todo o Brasil','Trocas em até 7 dias'].map(t=>(
+              <span key={t} style={{color:'rgba(245,237,225,.85)',fontSize:14}}>{t}</span>
+            ))}
+          </div>
+        </div>
+        <div>
+          <span style={{fontFamily:"'Marcellus SC',serif",fontSize:11,letterSpacing:'.2em',color:'var(--gold-soft)'}}>FALE CONOSCO</span>
+          <div style={{color:'rgba(245,237,225,.85)',fontSize:14,lineHeight:1.7,marginTop:16,display:'flex',flexDirection:'column',gap:6}}>
+            <span>Porto Alegre · RS</span>
+            <a href={`https://wa.me/${LJ_STORE.whatsapp}`} target="_blank" rel="noopener noreferrer"
+              style={{color:'#4EE87A',textDecoration:'none',fontWeight:600}}>
+              WhatsApp: (51) 99681-3336
+            </a>
+            <span>{LJ_STORE.email}</span>
+          </div>
+        </div>
+      </div>
+      <div style={{borderTop:'1px solid rgba(245,237,225,.14)'}}>
+        <div style={{maxWidth:1200,margin:'0 auto',padding:'18px 24px',display:'flex',flexWrap:'wrap',gap:10,justifyContent:'space-between',fontSize:12.5,color:'rgba(245,237,225,.6)'}}>
+          <span>© {new Date().getFullYear()} Axé de Quitéria · Todos os direitos reservados</span>
+          <span>Pagamento seguro · Pix · Cartão · Boleto</span>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+function HeartIcon({ filled }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill={filled?'#C4553B':'none'}
+      stroke={filled?'#C4553B':'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>
+  );
+}
+
+/* ---------- Bottom Tab Bar (mobile PWA) ---------- */
+function BottomTabBar({ activeTab, onTab, cartCount }) {
+  const tabs = [
+    { id:'home',    label:'Início',  iconPath:'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' },
+    { id:'shop',    label:'Loja',    iconPath:'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z' },
+    { id:'cart',    label:'Sacola',  iconPath:'M6 8h12l-1 12H7L6 8z M9 8V6a3 3 0 0 1 6 0v2' },
+    { id:'account', label:'Conta',   iconPath:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z' },
+  ];
+  return (
+    <nav className="lj-bottom-tabs" role="tablist" aria-label="Navegação principal">
+      {tabs.map(t => (
+        <button key={t.id} role="tab" aria-selected={activeTab===t.id} aria-label={t.label}
+          className={`lj-tab-item${activeTab===t.id?' active':''}`}
+          onClick={()=>onTab(t.id)}>
+          <svg className="lj-tab-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            {t.iconPath.split(' M').map((seg,i)=>(
+              <path key={i} d={i===0?seg:'M'+seg}/>
+            ))}
+          </svg>
+          {t.id==='cart' && cartCount>0 && (
+            <span className="lj-tab-badge" aria-label={`${cartCount} itens`}>{cartCount}</span>
+          )}
+          <span className="lj-tab-label">{t.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+/* ---------- Mobile Header (per-screen) ---------- */
+function MobileHeader({ title, onBack, backLabel, onCart, cartCount, onMenu, actions }) {
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const backChar = isIOS ? '‹' : '←';
+  return (
+    <div className="lj-mobile-header" role="banner">
+      {onBack ? (
+        <button className="lj-mobile-back-btn" onClick={onBack} aria-label="Voltar">
+          <span style={{fontSize:isIOS?26:20,lineHeight:1}}>{backChar}</span>
+          {backLabel && <span style={{fontSize:14,color:'var(--clay)',fontWeight:600,marginLeft:2}}>{backLabel}</span>}
+        </button>
+      ) : (
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          {onMenu && (
+            <button className="lj-mobile-menu-btn" onClick={onMenu} aria-label="Menu">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/>
+              </svg>
+            </button>
+          )}
+          <img src="assets/logo-axe.jpeg" alt="Axé de Quitéria" style={{width:34,height:34,borderRadius:'50%',objectFit:'contain',boxShadow:'0 0 0 1px var(--line)'}}/>
+        </div>
+      )}
+      <span className="lj-mobile-header-title">{title || 'Axé de Quitéria'}</span>
+      {onCart && (
+        <button className="lj-mobile-header-action" onClick={onCart} aria-label={`Carrinho${cartCount>0?`, ${cartCount} itens`:''}`}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+            <path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
+          </svg>
+          {cartCount>0 && (
+            <span style={{position:'absolute',top:2,right:2,background:'var(--clay)',color:'#fff',fontSize:9,fontWeight:700,
+              minWidth:15,height:15,borderRadius:999,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 3px'}}>
+              {cartCount}
+            </span>
+          )}
+        </button>
+      )}
+      {actions}
+    </div>
+  );
+}
+
+/* ---------- Side Menu Drawer ---------- */
+function SideMenuDrawer({ open, onClose, onHome, onListing, onGuias, onSobre, onContato, onAccount, user, onLogout }) {
+  if (!open) return null;
+  const navItems = [
+    { label:'Início',  fn: onHome },
+    { label:'Loja',    fn: onListing },
+    { label:'Guias',   fn: onGuias },
+    { label:'Sobre',   fn: onSobre },
+    { label:'Contato', fn: onContato },
+  ];
+  return (
+    <div className="lj-side-drawer-overlay">
+      <div className="lj-side-drawer-backdrop" onClick={onClose}/>
+      <div className="lj-side-drawer">
+        {/* Header */}
+        <div style={{display:'flex',alignItems:'center',gap:12,padding:'20px 16px',borderBottom:'1px solid var(--line)',flexShrink:0}}>
+          <img src="assets/logo-axe.jpeg" alt="Axé de Quitéria" style={{width:40,height:40,borderRadius:'50%',objectFit:'contain',boxShadow:'0 0 0 1px var(--line)'}}/>
+          <span style={{flex:1,fontFamily:"'Marcellus',serif",fontSize:18,color:'var(--ink)'}}>Axé de Quitéria</span>
+          <button onClick={onClose} style={{background:'none',border:'none',fontSize:24,cursor:'pointer',color:'var(--muted)',lineHeight:1,padding:'4px 8px'}}>×</button>
+        </div>
+        {/* Nav */}
+        <nav style={{flex:1}}>
+          {navItems.map(({label, fn})=>(
+            <button key={label} className="lj-drawer-nav-btn" onClick={()=>{fn&&fn();onClose();}}>
+              {label}
+            </button>
+          ))}
+        </nav>
+        {/* Divider */}
+        <div style={{height:1,background:'var(--line)',margin:'0 20px'}}/>
+        {/* Account */}
+        {user ? (
+          <>
+            <button className="lj-drawer-nav-btn" onClick={()=>{onAccount&&onAccount();onClose();}}>
+              <span style={{width:36,height:36,borderRadius:'50%',background:'var(--clay)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Marcellus',serif",fontSize:16,flexShrink:0}}>
+                {(user.nome||'U').charAt(0).toUpperCase()}
+              </span>
+              <span>
+                <span style={{display:'block',fontSize:14,fontWeight:700,color:'var(--ink)'}}>{user.nome}</span>
+                <span style={{display:'block',fontSize:12,color:'var(--muted)'}}>{user.email}</span>
+              </span>
+            </button>
+            <button className="lj-drawer-nav-btn" onClick={()=>{onLogout&&onLogout();onClose();}}
+              style={{color:'var(--clay-deep)',borderBottom:'none',marginBottom:16}}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M15 4h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-3"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h9"/></svg>
+              Sair da conta
+            </button>
+          </>
+        ) : (
+          <button className="lj-drawer-nav-btn" onClick={()=>{onAccount&&onAccount();onClose();}}
+            style={{borderBottom:'none',marginBottom:16}}>
+            <span style={{width:36,height:36,borderRadius:'50%',background:'var(--cream-2)',color:'var(--clay)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg>
+            </span>
+            Entrar / Criar conta
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { Icon, Ph, BtnClay, BtnOutline, ProductCard, AppHeader, AnnouncementBar, Toast, WaButton, Drawer, NavLink, HeaderIconBtn, AppFooter, HeartIcon, BottomTabBar, MobileHeader, SideMenuDrawer });

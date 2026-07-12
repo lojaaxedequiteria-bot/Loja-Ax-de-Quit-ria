@@ -1,8 +1,9 @@
 /* Axé de Quitéria — Loja: service worker */
-const CACHE = 'axe-loja-v1';
+const CACHE = 'axe-loja-v15';
 const SHELL = [
   './Loja.html',
   './loja.css',
+  './loja-mobile.css',
   './loja-supabase.js',
   './loja-data.js',
   './loja-ui.jsx',
@@ -12,6 +13,7 @@ const SHELL = [
   './loja-cart.jsx',
   './loja-app.jsx',
   './assets/logo-circ.png',
+  './assets/logo-axe.jpeg',
   './manifest.webmanifest',
 ];
 

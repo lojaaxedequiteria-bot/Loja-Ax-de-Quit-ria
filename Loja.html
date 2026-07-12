@@ -2,42 +2,33 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"/>
-<title>Axé de Quitéria — Loja</title>
-<meta name="description" content="Guias, pulseiras e itens sagrados do Axé de Quitéria. Porto Alegre, RS."/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Axé de Quitéria — Artigos Religiosos</title>
+<meta name="description" content="Guias, pulseiras e itens sagrados firmados à mão em Porto Alegre, RS."/>
 <meta name="theme-color" content="#B0542F"/>
 <link rel="manifest" href="manifest.webmanifest"/>
-<link rel="apple-touch-icon" href="assets/logo-circ.png"/>
-<link rel="icon" type="image/png" href="assets/logo-circ.png"/>
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Axé de Quitéria"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="format-detection" content="telephone=no"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Marcellus+SC&family=Mulish:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="loja.css"/>
-<style>
-  html,body{margin:0;padding:0;height:100%;background:#2A211B;}
-  body{font-family:"Hanken Grotesk",system-ui,sans-serif;}
-  #root{
-    height:100dvh;width:100%;max-width:520px;margin:0 auto;
-    background:var(--paper);position:relative;overflow:hidden;
-    box-shadow:0 0 60px rgba(0,0,0,.25);
-    --safe-top:max(env(safe-area-inset-top),8px);
-    --safe-bottom:max(env(safe-area-inset-bottom),10px);
-  }
-</style>
+<link rel="stylesheet" href="loja-mobile.css"/>
 </head>
 <body>
 <div id="root"></div>
 
-<!-- React (prod) -->
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
-
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.47.0/dist/umd/supabase.js" crossorigin="anonymous"></script>
-<script src="loja-supabase.js"></script>
 
-<!-- App -->
+<script src="loja-supabase.js"></script>
 <script src="loja-data.js"></script>
 <script type="text/babel" data-presets="react" src="loja-ui.jsx"></script>
 <script type="text/babel" data-presets="react" src="loja-home.jsx"></script>

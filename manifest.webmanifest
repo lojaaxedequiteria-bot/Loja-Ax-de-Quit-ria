@@ -2,13 +2,17 @@
   "name": "Loja Axé de Quitéria",
   "short_name": "Axé de Quitéria",
   "description": "Guias, pulseiras e itens sagrados artesanais",
-  "start_url": "./Loja.html",
+  "start_url": "/Loja.html",
   "display": "standalone",
-  "background_color": "#FAF5EC",
-  "theme_color": "#B0542F",
   "orientation": "portrait",
+  "background_color": "#F5EDE1",
+  "theme_color": "#B0542F",
+  "lang": "pt-BR",
+  "categories": ["shopping", "lifestyle"],
   "icons": [
-    { "src": "assets/logo-circ.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "assets/logo-circ.png", "sizes": "512x512", "type": "image/png" }
-  ]
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": []
 }
