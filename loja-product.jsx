@@ -304,7 +304,7 @@ function CheckoutScreen({ cart, onBack, onSuccess, user }) {
       frete: { id: freteObj.id, label: freteObj.label, valor: freteObj.value, prazo: freteObj.prazo },
       pagamento,
       total,
-      status: 'producao',
+      status: 'recebido',
       origem: 'loja',
     };
 
@@ -313,7 +313,7 @@ function CheckoutScreen({ cart, onBack, onSuccess, user }) {
     } catch(_) {}
 
     try {
-      const o = { id: numero, itens: cart, total, status: 'Em produção', data: new Date().toLocaleDateString('pt-BR') };
+      const o = { id: numero, itens: cart, total, status: 'recebido', data: new Date().toLocaleDateString('pt-BR') };
       const prev = JSON.parse(localStorage.getItem(LJ_ORDERS_KEY) || '[]');
       localStorage.setItem(LJ_ORDERS_KEY, JSON.stringify([o, ...prev]));
     } catch(_) {}

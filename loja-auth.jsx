@@ -434,10 +434,10 @@ function AccPedidos({ user }) {
   const [trackModal, setTrackModal] = useState(null); // order object or null
 
   const STATUS_MAP = {
-    'producao': { label: 'Preparando seu pedido', color: '#B58A34' },
-    'pronto':   { label: 'Pronto para envio',     color: '#2F7D5E' },
-    'enviado':  { label: 'A caminho!',             color: '#2A5A8A' },
-    'entregue': { label: 'Entregue',              color: '#2F4E8A' },
+    'recebido': { label: 'Pedido recebido',       color: '#8A6A14' },
+    'producao': { label: 'Em produção',           color: '#B58A34' },
+    'enviando': { label: 'A caminho!',             color: '#2A5A8A' },
+    'concluido':{ label: 'Concluído',              color: '#2F4E8A' },
   };
 
   useEffect(() => {
@@ -544,7 +544,7 @@ function AccPedidos({ user }) {
                   <div style={{marginBottom:20}}>
                     <span style={{fontSize:13,fontWeight:700,color:'#fff',background:st.color,padding:'7px 16px',borderRadius:999}}>{st.label}</span>
                   </div>
-                  {trackModal.status === 'entregue' && (
+                  {(trackModal.status === 'enviando' || trackModal.status === 'concluido') && (
                     <a href="https://rastreamento.correios.com.br/app/index.php" target="_blank" rel="noopener noreferrer"
                       style={{display:'inline-flex',alignItems:'center',gap:6,color:'var(--clay)',fontSize:15,fontWeight:700,textDecoration:'none'}}>
                       Rastrear nos Correios →
